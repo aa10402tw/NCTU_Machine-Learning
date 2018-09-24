@@ -9,7 +9,8 @@ class ChenKW_Matrix:
 		self.mat = [ mat[i][:] for i in range(len(mat)) ] 
 		self.n_row = len(mat)
 		self.n_col = len(mat[0])
-		self.precision = print_precision
+		self.precision = 2
+		self.shape = (self.n_row, self.n_col)
 
 	################################################
 	### Operator Overloading make it easy to use ###
@@ -22,7 +23,8 @@ class ChenKW_Matrix:
 
 	''' Implementation of matrix multiplication'''
 	def __mul__(self, B):
-
+		if isinstance(B, int) or isinstance(B, float):
+			return ChenKW_Matrix([[self.mat[i][j] * B for j in range(self.n_col)]  for i in range(self.n_row)])
 		if not self.n_col == B.n_row:
 			print('Wrong dimension while mat mul') 
 			return None
@@ -51,11 +53,15 @@ class ChenKW_Matrix:
 
 	''' Define what will be printed  when call print(mat) '''
 	def __str__(self): 
+		max_len = 0
+		for i in range(self.n_row):
+			for j in range(self.n_col):
+				max_len = max(max_len, len(str('%.'+str(self.precision)+'f')%(self.mat[i][j]) ))
 		s = '['
 		for i in range(self.n_row):
 			s += '['
 			for j in range(self.n_col):
-				s += str('% .'+str(self.precision)+'f')%(self.mat[i][j]) 
+				s += str('%' + str(max_len) + '.' +str(self.precision)+'f')%(self.mat[i][j]) 
 				if j < self.n_col-1 :
 					s += ' '
 			if(i >= self.n_row - 1):
