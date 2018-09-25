@@ -1,3 +1,3 @@
-1. When solving LSE, using LU instead of inverse
+1. Implement Inverse of matrix
 
-2. Hardcode f'(x), f''(x) in newton's method
+2. Clean up codes

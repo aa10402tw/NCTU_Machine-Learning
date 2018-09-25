@@ -1,11 +1,10 @@
 
+import numpy as np
 
-''' self-implemented matrix class (Author : NCTU CS 0756079, Chen Kuan-Wen ) '''
+''' self-implemented matrix class (NCTU CS 0756079, Chen Kuan-Wen ) '''
 class ChenKW_Matrix: 
 
 	def __init__(self, mat):
-		if isinstance(mat, ChenKW_Matrix):
-			mat = mat.mat
 		self.mat = [ mat[i][:] for i in range(len(mat)) ] 
 		self.n_row = len(mat)
 		self.n_col = len(mat[0])
@@ -15,6 +14,17 @@ class ChenKW_Matrix:
 	################################################
 	### Operator Overloading make it easy to use ###
 	################################################
+	def __eq__(self, mat):
+		if isinstance(mat, ChenKW_Matrix):
+			if mat.shape == self.shape:
+   				for row_1, row_2 in zip(mat, self):
+   					for num_1, num_2 in zip(row_1, row_2):
+   						if  not (num_1 - num_2 < 0.000001):
+   							return False
+   				return True
+		else:
+			return False
+
 	def __getitem__(self,key):
 		return self.mat[key]
 
@@ -30,6 +40,7 @@ class ChenKW_Matrix:
 			return None
 		resultMat = [[sum( [self.mat[i][j] * B.mat[j][k] for j in range(self.n_col)] )  for k in range(B.n_col) ]  for i in range(self.n_row)]
 		return ChenKW_Matrix(resultMat)
+	__rmul__ = __mul__
 
 	''' IImplementation of matrix addition'''
 	def __add__(self, B):
@@ -38,6 +49,7 @@ class ChenKW_Matrix:
 			return None
 		resultMat = [[self.mat[i][j] + B.mat[i][j] for j in range(self.n_col)]  for i in range(self.n_row)]
 		return ChenKW_Matrix(resultMat)
+	__radd__ = __add__
 
 	''' Implementation of matrix subtraction'''
 	def __sub__(self, B):
@@ -73,12 +85,17 @@ class ChenKW_Matrix:
 	######################
 	### Useful Methods ###
 	######################
+	def row_op(self, type, i, j=0, k=0):
+		''' see copyMatrix(A) in detail '''
+		return ChenKW_Matrix.rowOperation(self, type, i, j, k)
+
 	def copy(self):
 		''' see copyMatrix(A) in detail '''
 		return ChenKW_Matrix.copyMatrix(self)
 
 	def inv(self):
 		''' see inverse(A) in detail '''
+		return ChenKW_Matrix(np.linalg.inv(self.mat))
 		return ChenKW_Matrix.inverse(self)
 
 	def T(self):
@@ -103,6 +120,19 @@ class ChenKW_Matrix:
 	@staticmethod
 	def identity(n):
 		return ChenKW_Matrix( [[float(i==j) for j in range(n)] for i in range(n)] )
+
+	''' Implementation of matrix row operation'''
+	@staticmethod
+	def rowOperation(mat, type, i, j=0, k=0):
+		if type == 1: # mult row i for k times
+			mat[i] = [ mat[i][col] * k for col in range(len(mat[i]))]
+			return ChenKW_Matrix(mat)
+		elif type == 2: # row exchange
+			mat[i], mat[j] = mat[j], mat[i]
+			return ChenKW_Matrix(mat)
+		elif type == 3:
+			mat[j] = [ mat[j][col] + k * mat[i][col] for col in range(len(mat[i]))]
+			return ChenKW_Matrix(mat)
 
 	''' Implementation of Matrix Transpose'''
 	@staticmethod
@@ -131,88 +161,55 @@ class ChenKW_Matrix:
 		A_t  = list(map(list, zip(*A))) # unpack list and zip it, then map a list through it
 		return ChenKW_Matrix(A_t)
 
+	''' 
+	Implementation of  using LU decomposition to solve linear equation
+		formula:
+			Ax = b, and A = LU
+			(LU)x = L(Ux) = Ly = b, solve y
+			then solve Ux = y
+ 	'''
+	@staticmethod 
+	def LU_solve(A, b):
+		L, U = ChenKW_Matrix.LUdecomposition(A)
+		y = U * ChenKW_Matrix(b)
+
+		# Solve L * y = b
+		L_b = ChenKW_Matrix.concatenate(L, b, axis=1)
+		for d in range(L_b.n_row):
+			for row in range(d+1, L_b.n_row):
+				m = -1 * (L_b[row][d] / L_b[d][d])
+				L_b = L_b.row_op(type=3, i=d, j=row, k=m)
+		y = ChenKW_Matrix([[row[-1] for row in L_b]]).T()
+
+		# solve Ux = y
+		U_y = ChenKW_Matrix.concatenate(U, y, axis=1)
+		for d in range(U_y.n_row):
+			U_y = U_y.row_op(type=1, i=d, k=(1/U_y[d][d]))
+			for row in range(d-1, -1, -1):
+				m = -1 * (U_y[row][d] / U_y[d][d])
+				U_y = U_y.row_op(type=3, i=d, j=row, k=m)
+		x = ChenKW_Matrix([[row[-1] for row in U_y]]).T() 
+		return x
 
 	''' 
-	Implementation of LU decomposition (with pivoting), i.e. PA = LU 
+	Implementation of LU decomposition (without pivoting), i.e. A = LU 
 		formula:
-			PA = LU, let A' = PA, where p i permutation matrix
 			u_ij =  a_ij - sum([u_kj * l_ik for k=1 to i-1])
-			l_ij = (a_ij - sum([u_{kj}*l_{ik} for k=1 to j-1]) / u_jj
+			l_ij = (a_ij - sum([u_kj * l_ik for k=1 to j-1]) / u_jj
  	'''
 	@staticmethod 
 	def LUdecomposition(A):
 		n = len(A)
-		def pivoting_matrix(A):
-		    """ Returns the pivoting matrix for A """
-		    n = len(A)
-		    P = ChenKW_Matrix.identity(n).mat # P =I
-		    # Rearrange the P                                                                                                                                                                                             
-		    for d in range(n):
-		    	max_row_num = max([A[row][d] for row in range(d, n)])
-		    	max_row = [A[row][d] for row in range(d, n)].index(max_row_num) + d                                                                                                                                                                        
-		    	P[d], P[max_row] = P[max_row], P[d] # Swap the row
-		    return P
-
 		L = [[float(i==j) for j in range(n)] for i in range(n)]    # L = I
 		U = [[float(0.00) for j in range(n)] for i in range(n)]    # U = O
 
-		P = pivoting_matrix(A)
-		PA = (ChenKW_Matrix(P)*ChenKW_Matrix(A)).mat
-
 		for j in range(n):
 			for i in range(j+1):
-				U[i][j] = PA[i][j] - sum( [U[k][j]*L[i][k] for k in range(i) ] )
+				U[i][j] = A[i][j] - sum( [U[k][j]*L[i][k] for k in range(i) ] )
 			for i in range(j, n):
-				L[i][j] = (PA[i][j] - sum([U[k][j]*L[i][k] for k in range(j)]) ) / U[j][j]
+				L[i][j] = (A[i][j] - sum([U[k][j]*L[i][k] for k in range(j)]) ) / U[j][j]
+		return ChenKW_Matrix(L), ChenKW_Matrix(U)
 
-
-		return ChenKW_Matrix(L), ChenKW_Matrix(U), ChenKW_Matrix(P)
-
-	''' Implementation of Inverse using LU '''
-	def inverse(A):
-		'''
-		formula:
-		 	 P * A = L * U 
-		 	=>  A = inv(P) * L * U
-		 	=>  inv(A) = inv(inv(P) * L * U)
-		 	=>  inv(A) = inv(U) * inv(L) * P
-		'''
-		n = len(A)
-
-		# 1. Get the LU decomposition of A, i.e. PA = LU
-		L, U, P = ChenKW_Matrix.LUdecomposition(A)
-
-		# 2. Find inverse of L, i.e. inv(L)
-		I =  ChenKW_Matrix.identity(n) 						# Create an Identity matrix
-		L_I = ChenKW_Matrix.concatenate(L, I, axis=1).mat   # Concate A with I horizatonally
-		for d in range(n):
-			for row in range(d+1, n):
-				m = (L_I[row][d] / L_I[d][d])
-				L_I[row] = [ L_I[row][col] - (m * L_I[d][col]) for col in range(len(L_I[d])) ] # row operation(sub)
-			L_I[d] = [ L_I[d][col]/L_I[d][d]  for col in range(len(L_I[d])) ] #  scale diagonal to 1 
-
-		L_inv = []
-		for L_I_row in L_I:
-			I_row = L_I_row[n:]
-			L_inv.append(I_row)
-		
-		# 3. Find inverse of U, i.e. inv(U)
-		I =  ChenKW_Matrix.identity(n)
-		U_I = ChenKW_Matrix.concatenate(U, I, axis=1).mat
-		for d in range(n):
-			for row in range(d-1, -1, -1):
-				m = (U_I[row][d] / U_I[d][d])
-				U_I[row] = [ U_I[row][col] - (m * U_I[d][col]) for col in range(len(U_I[d])) ] # row operation(sub)
-			U_I[d] = [ U_I[d][col]/U_I[d][d]  for col in range(len(U_I[d])) ] #  scale diagonal to 1 
-
-		U_inv = []
-		for U_I_row in U_I:
-			I_row = U_I_row[n:]
-			U_inv.append(I_row)
-
-		# 4. Finally, inv(A) = inv(U) * inv(L) * P
-		A_inv = ChenKW_Matrix(U_inv) * ChenKW_Matrix(L_inv) * ChenKW_Matrix(P)
-		return A_inv
 		
 
 if __name__ == '__main__':
