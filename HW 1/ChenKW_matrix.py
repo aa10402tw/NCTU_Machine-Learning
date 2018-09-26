@@ -80,15 +80,16 @@ class ChenKW_Matrix:
 
 	''' Define what will be printed when call print(mat) '''
 	def __str__(self): 
-		max_len = 0
+		max_len = [0 for col in range(self.n_col)]
 		for i in range(self.n_row):
 			for j in range(self.n_col):
-				max_len = max(max_len, len(str('%.'+str(self.precision)+'f')%(self.mat[i][j]) ))
+				max_len[j] = max(max_len[j], len(str('%.'+str(self.precision)+'f')%(self.mat[i][j]) ))
 		s = '['
 		for i in range(self.n_row):
-			s += '['
+			s_ = '[' if i==0 else' ['
+			s += s_
 			for j in range(self.n_col):
-				s += str('%' + str(max_len) + '.' +str(self.precision)+'f')%(self.mat[i][j]) 
+				s += str('%' + str(max_len[j]) + '.' +str(self.precision)+'f')%(self.mat[i][j]) 
 				if j < self.n_col-1 :
 					s += ' '
 			if(i >= self.n_row - 1):

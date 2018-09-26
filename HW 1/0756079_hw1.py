@@ -37,9 +37,11 @@ def Newton(xs, ys, n_basis, x0=None, max_iter=100, step_size=1):
 	formula:
 		equation : x_new = x - step_size*(f'(x)/f''(x)) 
 			or x_new = x - step_size*inv(Hession)*gradient
-		let y = inv(Hession)*gradient, A = Hession, and b = gradient
-		we can get y by solving Ay = b using LU decompsition
+			where Hession = 2*A^T*A, gradient = 2*A^T*A*x - 2*A^T*b
+		let y = inv(Hession)*gradient, A' = Hession, and b' = gradient
+		we can get y by solving A'y = b' using LU decompsition
 	'''
+
 	if x0 is None:
 		x0 = ChenKW_Matrix([[0] for i in range(n_basis)])
 	A = ChenKW_Matrix([[ x**i for i in range(n_basis) ] for x in xs])
@@ -48,6 +50,8 @@ def Newton(xs, ys, n_basis, x0=None, max_iter=100, step_size=1):
 	for i in range(max_iter):
 		A_ = hession = (2 *A.T * A) 
 		b_ = gradient =  (2 * A.T * A * x) -  ( 2 * A.T * b)
+		print('Hession\n', hession)
+		print('gradient\n', gradient)
 		step_dir = y = ChenKW_Matrix.LU_solve(A_, b_)
 		x_new = x - (step_size * step_dir)
 		if(x_new == x):
@@ -56,6 +60,7 @@ def Newton(xs, ys, n_basis, x0=None, max_iter=100, step_size=1):
 			break
 		x = x_new
 
+	## print out the formula
 	formula = 'y = ' 
 	for i, w in enumerate(x.T[0]):
 		if i > 0 :
@@ -88,7 +93,7 @@ def read_data(file_name):
 # lambda_ = args.lambda_
 
 file_path = 'test.txt'
-n_basis = 7
+n_basis = 3
 lambda_ = 0
 xs, ys = read_data(file_path)
 
