@@ -1,7 +1,21 @@
 from ChenKW_matrix import ChenKW_Matrix
 import argparse
-import matplotlib.pyplot as plt
 
+
+def get_formula(w):
+	formula = 'y = '  
+	for i, w_ in enumerate(w.T[0]):
+		if i > 0 :
+			formula += ' + '
+		formula += '(%.2f)(x^%i)'%(w_, i)
+	return formula
+
+def rLSEerror(xs, ys, w, lambda_=0):
+	A = ChenKW_Matrix([[ x**i for i in range(n_basis) ] for x in xs])
+	b = ChenKW_Matrix([ys]).T
+	error = ((A*w-b).T * (A*w-b)) + lambda_*(w.T*w)
+	error = error.value
+	return error
 
 def rLES(xs, ys, n_basis, lambda_):
 	'''
@@ -19,16 +33,6 @@ def rLES(xs, ys, n_basis, lambda_):
 	A_ = (A.T * A + lambda_I )
 	b_ = A.T * b
 	x = ChenKW_Matrix.LU_solve(A_, b_)
-
-	formula = 'y = ' 
-	for i, w in enumerate(x.T[0]):
-		if i > 0 :
-			formula += ' + '
-		formula += '(%.2f)(x^%i)'%(w, i)
-	print('The Formula is : [ %s ]' %(formula) )
-	error = ((A*x-b).T * (A*x-b)) + lambda_*(x.T*x)
-	error = error.value
-	print('The Error is : [ %.2f ]'% (error))
 	return x
 
 
@@ -50,8 +54,6 @@ def Newton(xs, ys, n_basis, x0=None, max_iter=100, step_size=1):
 	for i in range(max_iter):
 		A_ = hession = (2 *A.T * A) 
 		b_ = gradient =  (2 * A.T * A * x) -  ( 2 * A.T * b)
-		print('Hession\n', hession)
-		print('gradient\n', gradient)
 		step_dir = y = ChenKW_Matrix.LU_solve(A_, b_)
 		x_new = x - (step_size * step_dir)
 		if(x_new == x):
@@ -59,17 +61,6 @@ def Newton(xs, ys, n_basis, x0=None, max_iter=100, step_size=1):
 			x = x_new
 			break
 		x = x_new
-
-	## print out the formula
-	formula = 'y = ' 
-	for i, w in enumerate(x.T[0]):
-		if i > 0 :
-			formula += ' + '
-		formula += '(%.2f)(x^%i)'%(w, i)
-	print('The Formula is : [ %s ]' %(formula) )
-	error =  ((A*x-b).T * (A*x-b))
-	error = error.value
-	print('The Error is : [ %.2f ]'%error)
 	return x
 
 def read_data(file_name):
@@ -83,28 +74,31 @@ def read_data(file_name):
 			ys.append(y)
 	return xs, ys
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument("file_path", default="default")
-# parser.add_argument("n_basis", default=3)
-# parser.add_argument("lambda_", default=1)
-# args = parser.parse_args()
-# file_path = args.file_path
-# n_basis = args.n_basis
-# lambda_ = args.lambda_
+parser = argparse.ArgumentParser()
+parser.add_argument("file_path", default="default")
+parser.add_argument("n_basis", default=3)
+parser.add_argument("lambda_", default=1)
+args = parser.parse_args()
+file_path = args.file_path
+n_basis = int(args.n_basis)
+lambda_ = float(args.lambda_)
 
-file_path = 'test.txt'
-n_basis = 3
-lambda_ = 0
+# file_path = 'test.txt'
+# n_basis = 3
+# lambda_ = 0
+
 xs, ys = read_data(file_path)
 
-print('#' + '-' * 100 )
-print("Least Square error with regularization")
-rLES(xs, ys, n_basis, lambda_)
-print( '-' * 100 + '#')
+print("#---- Least Square error with regularization ----#")
+w = rLES(xs, ys, n_basis, lambda_)
+print('Formula of rLSE is [ {formula} ]'.format(formula=get_formula(w)))
+print('Error of rLSE is [ {error:.4f} ]'.format(error=rLSEerror(xs, ys, w, lambda_)))
 
-print('\n#' + '-' * 100 )
-print("Newton' method for optimization")
-Newton(xs, ys, n_basis)
-print( '-' * 100 + '#')
+print()
+
+print("#---- Newton' method for optimization ----#")
+w = Newton(xs, ys, n_basis)
+print('Formula of Newton is [ {formula} ]'.format(formula=get_formula(w)))
+print('Error of Newton is [ {error:.4f} ]'.format(error=rLSEerror(xs, ys, w, lambda_)))
 
 
