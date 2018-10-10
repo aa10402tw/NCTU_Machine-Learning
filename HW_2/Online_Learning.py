@@ -1,21 +1,10 @@
-# from ChenKW_matrix import ChenKW_Matrix
+from utils import *
 import argparse
 
-import math
+import math 
 from scipy.stats import beta
 import matplotlib.pyplot as plt
 import numpy as np
-
-
-def factorial(n):
-	result = 1
-	for x in range(1, n+1):
-		result *= x
-	return result
-
-def nCr(n, r):
-	return factorial(n) / (factorial(r) * factorial(n-r))
- 
 
 class Beta_Bayesian:
 	def __init__(self, a, b): 
@@ -27,6 +16,7 @@ class Beta_Bayesian:
 	def draw(self):
 		if not self.onDraw:
 			self.fig, self.ax = plt.subplots(1, 1)
+			self.ax.set_title('Online Learner')
 			self.onDraw = True
 		fig, ax = self.fig, self.ax
 		a, b = self.a, self.b 
@@ -73,8 +63,10 @@ def read_data(file_path):
 			num_0_list.append(num_0)
 			num_1_list.append(num_1)
 	return num_0_list, num_1_list
-
-#  2. Online learning 
+	
+#############################
+###  2. Online learning   ###
+#############################
 # parser = argparse.ArgumentParser()
 # parser.add_argument("file_path", default="default")
 # parser.add_argument("a", default=3)
