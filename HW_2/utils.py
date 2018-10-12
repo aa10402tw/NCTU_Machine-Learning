@@ -2,6 +2,8 @@ import struct
 import numpy as np
 import matplotlib.pyplot as plt
 
+import math
+
 def factorial(n):
 	result = 1
 	for x in range(1, n+1):
@@ -10,6 +12,9 @@ def factorial(n):
 
 def nCr(n, r):
 	return factorial(n) / (factorial(r) * factorial(n-r))
+
+
+
 
 
 def load_mnist(train=True):
@@ -37,10 +42,10 @@ def read_mnist_img(file_name):
 def read_mnist_label(file_name):
 	with open(file_name, 'rb') as f:
 		magic_number, num_labels = struct.unpack('>ii', f.read(8))
-		labels = np.zeros(num_labels)
+		labels = np.zeros(num_labels).astype(np.int32)
 		for i in range(num_labels):
 			value = struct.unpack('>B', f.read(1))[0]
-			labels[i] = value
+			labels[i] = int(value)
 		return labels
 
 def test_load_minst():
@@ -86,6 +91,7 @@ class Feature_Bins():
 
 	def get_count(self, bin_num):
 		return self.bins[int(bin_num)]
+
 	def total_count(self):
 		return sum(self.bins)
 
@@ -117,11 +123,74 @@ def print_probs(probs):
 	s += '{head:<6}'.format(head='Prob') + ''.join(second_line) + '\n' 
 	print(s)
 
+class Gaussian():
+
+	def __init__(self, id='', smooth=0.01):
+		self.num_data = 0
+		self.sum_of_square = 0
+		self.sum_of_data = 0
+		self.id = id
+		self.smooth = smooth
+
+	def update(self, data):
+		self.num_data += 1
+		self.sum_of_data += data
+		self.sum_of_square += data**2
+	
+	@property
+	def mean(self):
+		if self.num_data == 0:
+			return 0.0
+		return self.sum_of_data / self.num_data 
+
+	@property
+	def variance(self):
+		''' Var = 平方平均 - 平方平均 '''
+		if self.num_data == 0:
+			return 0.0
+		return (self.sum_of_square/self.num_data) - (self.mean**2) + self.smooth
+
+	@property
+	def std(self):
+		return self.variance ** (1/2) 
+
+	def pdf(self, x):
+		p = 1/(self.std*math.sqrt(2*math.pi)) * math.exp( (-1/2) * ((x-self.mean)/self.std)**2  )
+		if p < 0.00001:
+			print('Data = %d, Mean = %2.f, Var = %.2f, Prob = %f'%(x, self.mean, self.variance, p))
+		return max(0.0000001, p)
+
+	def logpdf(self, x):
+		return (-1/2)*math.log(2*math.pi*self.variance) + -1 *( (x-self.mean)**2 / (2*(self.variance**2)))
+
+	def distance(self, data):
+		return ( (data-self.mean) / self.std)
+
+	def __str__(self):
+		s = 'Gaussian %s\n' %(self.id)
+		s += 'Mean = %.2f, Variance= %.2f (#data=%d)'%(self.mean, self.variance, self.num_data)
+		return s 
+
+
+def img_to_vector(imgs):
+	N, dims = imgs.shape[0], imgs.shape[1:]
+	dim = 1 
+	for d in dims:
+		dim *= d
+	X = np.reshape(imgs, (N, dim))
+	return X
+
 if __name__ == '__main__':
-	bins = Feature_Bins(32)
-	print(len(str(10)))
-	print(bins)
-	probs = [0.1, 0.5888, 0.11111111, 0.124556]
-	print_probs(probs)
-	l = [9.640073411041338e-307, 0.0, 3.782100448838266e-290, 2.2575530836797617e-276, 3.858000729702203e-259, 3.0518926958908267e-269, 1.583220655e-315, 1.1855717910607961e-205, 1.206435365501705e-274, 1.054756447106051e-237]
-	print('%.12f' %sum(l))
+	# f1 = Feature_Gaussian()
+	# f1.update(-1)
+	# f1.update(1)
+	# print(f1.mean)
+	# print(f1.variance)
+	# print(f1.log_pdf(50))
+	# import scipy.stats
+	# print(scipy.stats.norm(0, 1).logpdf(50))
+	X = img_to_vector(np.zeros((10,28,28)))
+	print(X.shape)
+
+
+	
