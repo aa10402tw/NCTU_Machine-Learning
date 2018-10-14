@@ -1,0 +1,2 @@
+Discrete : 0.8472
+Continuous : 0.7902

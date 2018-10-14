@@ -82,19 +82,24 @@ init_a = 1
 init_b = 1
 
 learner = Beta_Bayesian(init_a, init_b)
+learner.draw()
+print('Initial Prior is  (a={a},b={b})'.format(
+		a=learner.a, b=learner.b))
+
+
 num_0_list, num_1_list = read_data(file_path)
 for num_0, num_1 in zip(num_0_list, num_1_list):
 	evidence = [num_0, num_1]
 	#print('---See evidence of (#0={n_0}, #1={n_1})'.format(n_0=num_0, n_1=num_1) )
 	p, likelihood = learner.calculateLikelihood(evidence)
-
 	print('The Binomial likelihood is p={p:>.4f}, ' \
 		'prior is p={prior:>.4f} and posterior is p={posterior:>.4f}'\
 		' (a={a},b={b} --> a={new_a},b={new_b})'.format(
 		p=p, likelihood=likelihood, prior = learner.prior, posterior = learner.inference(evidence),   
 		a=learner.a, b=learner.b, new_a=learner.a+num_1, new_b=learner.b+num_1))
-	learner.draw()
 	learner.update(evidence)
+	learner.draw()
+	
 plt.show()
 
 
