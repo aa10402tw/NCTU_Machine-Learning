@@ -5,6 +5,14 @@ import matplotlib.pyplot as plt
 import math
 
 
+def gamma(n):
+    return factorial(n - 1)
+
+
+def beta_pdf(p, a, b):
+    return (p**(a - 1)) * ((1 - p)**(b - 1)) * (gamma(a + b) / (gamma(a) * gamma(b)))
+
+
 def factorial(n):
     result = 1
     for x in range(1, n + 1):
