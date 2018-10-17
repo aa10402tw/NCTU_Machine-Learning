@@ -12,7 +12,7 @@ class Beta_Bayesian:
     def __init__(self, a, b):
         self.a = a  # a is num of success
         self.b = b  # b is num of failure
-        self.parameter = a / (a + b)
+        self.parameter = (a-1) / (a + b -2)
         self.onDraw = False
 
     def draw(self):
@@ -40,7 +40,7 @@ class Beta_Bayesian:
     def getPosteriorPdf(self, evidence):
         new_a = self.a + evidence[1]
         new_b = self.b + evidence[0]
-        posterior = new_a / (new_a + new_b)
+        posterior = (new_a-1) / (new_a+new_b-2)
         return posterior, beta_pdf(posterior, new_a, new_b)
 
     def calculateLikelihood(self, evidence):
@@ -53,13 +53,13 @@ class Beta_Bayesian:
     def update(self, evidence):
         self.a += evidence[1]
         self.b += evidence[0]
-        self.parameter = self.a / (self.a + self.b)
+        self.parameter = (self.a-1) / (self.a + self.b-2)
         return self.parameter
 
     def inference(self, evidence):
         new_a = self.a + evidence[1]
         new_b = self.b + evidence[0]
-        posterior = new_a / (new_a + new_b)
+        posterior = (new_a-1) / (new_a + new_b-2)
         return posterior
 
 
@@ -94,8 +94,8 @@ def read_data(file_path):
 # init_b = args.b
 
 file_path = 'test.txt'
-init_a = 2
-init_b = 2
+init_a = 5
+init_b = 1
 
 learner = Beta_Bayesian(init_a, init_b)
 learner.draw()
