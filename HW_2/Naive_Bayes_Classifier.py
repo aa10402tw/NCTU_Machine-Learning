@@ -96,7 +96,7 @@ MODES = ['0', 'Discrete', '1', 'Continuous']
 parser = argparse.ArgumentParser()
 parser.add_argument
 parser.add_argument("-mode", "--mode-option", help="Select mode",
-                    dest="mode", default="0", choices=(tuple(MODES)))
+                    dest="mode", default="1", choices=(tuple(MODES)))
 args = parser.parse_args()
 MODE = args.mode
 if MODE == '0':
