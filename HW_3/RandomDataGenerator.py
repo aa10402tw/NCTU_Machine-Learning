@@ -4,8 +4,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 from scipy.stats import norm
-METHODS = ['12_uniform', 'Box-Muller_Tranform', 'uniform_inverse']
 
+METHODS = ['12_uniform', 'Box-Muller_Tranform', 'uniform_inverse']
 
 def CLT_std_norm_rand():
     random_nums = [random.uniform(0, 1) for x in range(12)] 
@@ -18,14 +18,12 @@ def gaussian_data_generator(mean, var, method=0):
     norm_rand = mean + (std_norm_rand * var**(1/2))
     return norm_rand
 
-
-def polynomial_linear_data(num_basis, a, w, x):
+def polynomial_linear_data_generator(num_basis, a, w, x):
     # x = [random.uniform(-10, 10) * 20 for x in range(num_basis)]
     # x[0] = 1
     e = gaussian_data_generator(0, a)
     y = np.dot(x, w) + e
     return y
-
 
 def test_g():
     mean = 4
@@ -40,39 +38,47 @@ def test_g():
     from scipy.stats import norm
     range_min = mean - 3 * var**(1/2)
     range_max = mean + 3 * var**(1/2)
-    plt.subplot(121)
+    # plt.subplot(121)
     plt.hist(rand_nums, bins=int(num_bins), normed=1, alpha=0.5, range=(range_min, range_max))
 
-    plt.subplot(122)
+    # plt.subplot(122)
     x_axis = np.arange(range_min, range_max, 10/num_bins)
     plt.plot(x_axis, norm.pdf(x_axis, mean, var**(1/2)))
+    title = "mean={}, var={}".format(mean, var)
+    plt.title(title)
+
     plt.show()
 
 def test_p():
-    w = [1, 10]
+    w = [1, 0, 0, 0.1]
     noisy = 1
     num_basis = len(w)
     num_points = 100
     xs = np.arange(-10, 10, 20/num_points)
-    
+    phi_xs = [[x**(d) for d in range(num_basis)] for x in xs]
     # Poly
     ys = []
     for i in range(num_points):
-        x = [1, xs[i]]
-        y = polynomial_linear_data(num_basis, 0, w, x)
+        x = phi_xs[i]
+        y = polynomial_linear_data_generator(num_basis, 0, w, x)
         ys.append(y)
     plt.plot(xs, ys, label='Without Noisy')
 
     # Noisy 
     ys = []
     for i in range(num_points):
-        x = [1, xs[i]]
-        y = polynomial_linear_data(num_basis, noisy, w, x)
+        x = phi_xs[i]
+        y = polynomial_linear_data_generator(num_basis, noisy, w, x)
         ys.append(y)
     plt.plot(xs, ys, label='With Noisy')
 
-    
+    title = "y = "
+    for d, dw in enumerate(w):
+        title += "{}(x^{})".format(dw, d)
+        if d < len(w)-1:
+            title += " + "
     plt.legend(loc='best')
+    plt.title(title)
     plt.show()
 
 if __name__ == '__main__':
