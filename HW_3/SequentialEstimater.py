@@ -22,7 +22,7 @@ def var(data):
 # Use Welford's Online algorithm
 
 
-class Estimater:
+class Estimator:
 
     def __init__(self):
         self.num_data = 0
@@ -42,16 +42,32 @@ class Estimater:
         return self.mean, self.var
 
 
-def test_estimater(mean, var, max_iters):
-    model = Estimater()
+def test_estimator(mean, var, max_iters=100000, batch_size=1000, threshold='auto'):
+
+    if threshold == 'auto':
+        model = Estimator()
+        for i in range(1, batch_size+1):
+            data = gaussian_data_generator(mean, var)
+            model.update(data)
+        mean_estimated, var_estimated = model.estimate()
+        threshold = 0.0005 * var_estimated
+
+    model = Estimator()
     last_mean, last_var = 0, 0
-    for i in range(max_iters):
+
+    for i in range(1, max_iters+1):
         data = gaussian_data_generator(mean, var)
         model.update(data)
         mean_estimated, var_estimated = model.estimate()
-        # print(last_mean, last_var)
-        print('Data:%.4f' % data, 'Mean:%.4f' % mean_estimated, '\tVar%.4f' % var_estimated)
-        last_mean, last_var = mean_estimated, var_estimated
+        print('Data:%.4f' % data, '\tMean:%.4f' % mean_estimated, '\tVar:%.4f' % var_estimated)
+        if i % batch_size == 0:
+            diff_mean = abs(mean_estimated-last_mean)
+            diff_var = abs(var_estimated-last_var)
+
+            if diff_mean < threshold and diff_var < threshold:
+                break
+            last_mean, last_var = mean_estimated, var_estimated
+
 
 if __name__ == '__main__':
-    test_estimater(mean=0, var=10, max_iters=1000)
+    test_estimator(mean=0, var=1)
