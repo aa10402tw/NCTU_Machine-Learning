@@ -12,6 +12,9 @@ Table of Contents
 ## Linear-Regression
 Implement linear regression using Least Square error with regularization and Newton' method for optimization.
 
+<img src="imgs/linear-regression.png" width="60%"> 
+<br/>
+
 ## Naive-Bayes
 Implement MINIST hand written digit recognition using naive-bayes classifier (discrete and continuous) 
 
