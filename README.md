@@ -30,7 +30,7 @@ Implement **gaussian posterior predictive distribution**.
 ## Expectation–Maximization
 Implement Expectation–Maximization (EM).
 
-<img src="imgs/NB_Discrete.png" width="60%"> 
+<img src="imgs/EM.png" width="60%"> 
 <br/>
 
 ## Support-Vector-Machine
