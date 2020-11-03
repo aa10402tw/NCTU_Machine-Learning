@@ -36,8 +36,9 @@ Implement EM
 ## Support-Vector-Machine
 Experiment with SVM (using libsvm) for different kernel, including linear kernel, polynomial kernl and RBF kernel.
 
-<img src="imgs/svm.png" width="60%"> 
-<br/>
+|   | Linear  | Polynomial   | RBF   |
+|:-------------:|:-------------:|:-------------:|:-------------:|
+| Acc  |  95.00%  | 97.68%  | 98.08%  |
 
 ## K-Means_Spectral-clustering
 Implement K-Means and Spectral-clustering.
